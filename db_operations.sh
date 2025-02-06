@@ -2,6 +2,10 @@
 
 DB_DIR="./db_storage"
 
+if [[ ! -d "$DB_DIR" ]]; then
+mkdir -p "$DB_DIR"
+fi
+
 create_database(){
 read -p "Enter database name: " db_name
 if [[ -d "$DB_DIR/$db_name" ]]; then
