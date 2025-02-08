@@ -2,9 +2,10 @@
 
 source ./db_operations.sh
 
+
 main_menu(){
    echo -e "\n========================="
-   echo "            Main Menu    "
+   echo "            Main Menu by mariam    "
    echo "========================="
    echo "1) Create Database"
    echo "2) List Database"
