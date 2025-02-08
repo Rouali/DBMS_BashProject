@@ -1,17 +1,14 @@
 #!/bin/bash
 
 DB_DIR="./db_storage"
-
-if [[ ! -d "$DB_DIR" ]]; then
-    mkdir -p "$DB_DIR"
-fi
+CURRENT_DB_FILE="./current_db.txt"
 
 create_database() {
     read -p "Enter database name: " db_name
     if [[ -d "$DB_DIR/$db_name" ]]; then
         echo "Database '$db_name' already exists."
     else
-        mkdir "$DB_DIR/$db_name"
+        mkdir -p "$DB_DIR/$db_name"
         echo "Database '$db_name' created successfully."
     fi
 }
@@ -19,16 +16,6 @@ create_database() {
 list_databases() {
     echo "Available databases:"
     ls "$DB_DIR"
-}
-
-connect_database() {
-    read -p "Enter database name to connect: " db_name
-    if [[ -d "$DB_DIR/$db_name" ]]; then
-        echo "Connected to database '$db_name'."
-        table_menu "$db_name"
-    else
-        echo "Database '$db_name' does not exist."
-    fi
 }
 
 drop_database() {
@@ -40,3 +27,16 @@ drop_database() {
         echo "Database '$db_name' does not exist."
     fi
 }
+
+connect_database() {
+    read -p "Enter database name to connect: " db_name
+    if [[ -d "$DB_DIR/$db_name" ]]; then
+        echo "$db_name" > "$CURRENT_DB_FILE"
+        echo "Connected to database '$db_name'."
+        table_menu
+    else
+        echo "Database '$db_name' does not exist."
+    fi
+}
+
+source "./table_operations.sh"
