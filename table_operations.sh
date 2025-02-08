@@ -3,7 +3,6 @@
 DB_DIR="./db_storage"
 CURRENT_DB_FILE="./current_db.txt"
 
-# Function to get the currently connected database
 get_current_db() {
     if [[ -f "$CURRENT_DB_FILE" ]]; then
         cat "$CURRENT_DB_FILE"
@@ -194,10 +193,6 @@ delete_from_table() {
     else
         echo "Table '$table_name' does not exist."
     fi
-}
-
-update_table() {
-    echo "Update functionality not yet implemented."
 }
 
 table_menu() {
