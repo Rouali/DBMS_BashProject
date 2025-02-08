@@ -1,38 +1,69 @@
 #!/bin/bash
 
+DB_DIR="./db_storage"
+CURRENT_DB_FILE="./db_storage/current_db.txt"
+
+# Ensure the DB directory exists
+mkdir -p "$DB_DIR"
+
+# Load the current database if connected
+if [[ -f "$CURRENT_DB_FILE" ]]; then
+    CURRENT_DB=$(cat "$CURRENT_DB_FILE")
+else
+    CURRENT_DB=""
+fi
+
 SQL_COMMAND=$1
-DB_NAME=$2
-TABLE_NAME=$3
 
-case $SQL_COMMAND in
+case "$SQL_COMMAND" in
     CREATE\ DATABASE*)
-         ./db_operations.sh create_database ;;
-    USE*)
-         ./db_operations.sh connect_database ;;
-
-CREATE\ TABLE)
-if [[ -z "$DB_NAME" ]]; then
-echo "Error: No databases selected. Use 'USE <database>' firsr"
-exit1
-fi
-./table_operations.sh "$DB_NAME" create_table ;;
-
-INSERT\ INTO)
-if [[ -z "$DB_NAME" || -z "$TABLE_NAME" ]]; then
-echo "Error: Missing databases or table name."
-exit 1
-fi
-./table_operations.sh "$DB_NAME" insert_into_table "$TABLE_NAME" ;;
-
-SELECT\ \*FROM)
-if [[ -z "$DB_NAME" || -z "$TABLE_NAME" ]]; then
-echo "Error: Missing databases or table name."
-exit1
-fi
-./table_operations.sh "$DB_NAME" select_from_table "$TABLE_NAME" ;;
-
+        ./db_operations.sh create_database ;;
+    
+    USE\ *)
+        db_name=$(echo "$SQL_COMMAND" | cut -d ' ' -f2)
+        if [[ -d "$DB_DIR/$db_name" ]]; then
+            echo "$db_name" > "$CURRENT_DB_FILE"
+            echo "Connected to database '$db_name'."
+        else
+            echo "Database '$db_name' does not exist."
+        fi
+        ;;
+    
+    DROP\ DATABASE*)
+        ./db_operations.sh drop_database ;;
+    
+    LIST\ DATABASES)
+        ./db_operations.sh list_databases ;;
+    
+    CREATE\ TABLE*)
+        if [[ -z "$CURRENT_DB" ]]; then
+            echo "Error: No database selected. Use 'USE <database>' first."
+            exit 1
+        fi
+        ./table_operations.sh create_table ;;
+    
+    DROP\ TABLE*)
+        if [[ -z "$CURRENT_DB" ]]; then
+            echo "Error: No database selected. Use 'USE <database>' first."
+            exit 1
+        fi
+        ./table_operations.sh drop_table ;;
+    
+    INSERT\ INTO*)
+        if [[ -z "$CURRENT_DB" ]]; then
+            echo "Error: No database selected. Use 'USE <database>' first."
+            exit 1
+        fi
+        ./table_operations.sh insert_into_table ;;
+    
+    SELECT\ \*FROM*)
+        if [[ -z "$CURRENT_DB" ]]; then
+            echo "Error: No database selected. Use 'USE <database>' first."
+            exit 1
+        fi
+        ./table_operations.sh select_from_table ;;
+    
     *)
-         echo "Invalid SQL command."
-         ;;
+        echo "Invalid SQL command."
+        ;;
 esac
-
