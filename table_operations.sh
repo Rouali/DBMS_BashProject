@@ -1,101 +1,94 @@
 #!/bin/bash
 
-DB_NAME=$1
-TABLE_DIR="./db_storage/$DB_NAME"
+table_menu() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
 
-create_table(){
-read -p "Enter table name: " table_name
-if [[ -f "$TABLE_DIR/$table_name" ]]; then
-echo "Table '$table_name' already exists."
-return
-fi
+    while true; do
+        echo -e "\n========================="
+        echo "     Table Operations    "
+        echo "========================="
+        echo "1) Create Table"
+        echo "2) List Tables"
+        echo "3) Drop Table"
+        echo "4) Insert Into Table"
+        echo "5) Select From Table"
+        echo "6) Back to Database Menu"
+        echo "========================="
+        read -p "Choose an option: " choice
 
-read -p "Enter column names and data types: " columns
-read -p "Enter the primary key column:" primary_key
-
-echo "$columns" > "$TABLE_DIR/$table_name.meta"
-echo "PrimaryKey: $primary_key" >> "$TABLE_DIR/$table_name.meta"
-
-touch "$TABLE_DIR/$table_name"
-echo "Table '$table_name' created successfully."
+        case $choice in
+            1) create_table "$db_name" ;;
+            2) list_tables "$db_name" ;;
+            3) drop_table "$db_name" ;;
+            4) insert_into_table "$db_name" ;;
+            5) select_from_table "$db_name" ;;
+            6) return ;;
+            *) echo "Invalid option, try again." ;;
+        esac
+    done
 }
 
-list_table(){
-echo "Tables in '$DB_NAME':"
-ls "$TABLE_DIR"
+create_table() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
+
+    read -p "Enter table name: " table_name
+    if [[ -f "$table_dir/$table_name" ]]; then
+        echo "Table '$table_name' already exists."
+        return
+    fi
+
+    touch "$table_dir/$table_name"
+    echo "Table '$table_name' created successfully."
 }
 
-drop_table(){
-read -p "Enter table name to drop: " table_name
-if [[ -f "$TABLE_DIR/$table_name" ]]; then
-rm "$TABLE_DIR/$table_name"
-echo "Table '$table_name' deleted."
-else
-echo "Table '$table_name' does not exist."
-fi
+list_tables() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
+
+    echo "Tables in '$db_name':"
+    ls "$table_dir"
 }
 
-insert_into_table(){
-read -p "Enter table name: " table_name
-table_file="$TABLE_DIR/$table_name"
-meta_file="$TABLE_DIR/$table_name.meta"
+drop_table() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
 
-if [[ ! -f "$table_file" || ! -f "$meta_file" ]]; then
-echo "Table '$table_name' does not exist."
-return
-fi
-
-schema=$(head -n 1 "$meta_file")
-primary_key=$(grep "PrimaryKey:" "$meta_file" | cut -d '' -f2)
-IFS=',' read -ra columns <<< "$schema"
-
-values=()
-for column in "${columns[@]}"; do
-col_name=$(echo "$column" | awk '{print $1}')
-col_type=$(echo "$column" | awk '{print $2}')
-
-read -p "Enter value for $col_name($col_type): " value
-
-#validate data type
-if [[ "$col_type" == "INT" && ! "$value" =~ ^[0-9]+$ ]]; then
-echo "Error: $col_name must be an integer."
-return
-fi
-values+=("$value")
-done
-
-#check if pk already exist
-pk_index=1
-for i in "${!columns[@]}"; do 
-if [[ "${columns[i]}" == *"$primary_key"* ]]; then
-pk_index=$i
-break
-fi
-done
-if [[ "$pk_index" -ne -1 ]]; then
-pk_value="${values[$pk_index]}"
-if grep -q "^$pk_value|" "$table_file"; then
-echo "Error: Primary Key '$pk_value' already exists."
-return
-fi
-fi
-
-#inserting
-echo "{$values[*]}" | sed 's/ /|/g' >> "$table_file"
-echo "Data inserted into '$table_name'."
+    read -p "Enter table name to drop: " table_name
+    if [[ -f "$table_dir/$table_name" ]]; then
+        rm "$table_dir/$table_name"
+        echo "Table '$table_name' deleted."
+    else
+        echo "Table '$table_name' does not exist."
+    fi
 }
 
+insert_into_table() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
 
-select_from_table(){
-read -p "Enter table name: " table_name
-table_file="$TABLE_DIR/$table_name"
+    read -p "Enter table name: " table_name
+    if [[ ! -f "$table_dir/$table_name" ]]; then
+        echo "Table '$table_name' does not exist."
+        return
+    fi
 
-if [[ -f "$table_file" ]]; then
-echo "Contents of '$table_name':"
-column -t -s "|" "$table_file"
-else
-"Table '$table_name' does not exist."
-fi
+    read -p "Enter data (comma-separated): " data
+    echo "$data" >> "$table_dir/$table_name"
+    echo "Data inserted into '$table_name'."
 }
 
+select_from_table() {
+    local db_name=$1
+    local table_dir="./db_storage/$db_name"
 
+    read -p "Enter table name: " table_name
+    if [[ ! -f "$table_dir/$table_name" ]]; then
+        echo "Table '$table_name' does not exist."
+        return
+    fi
+
+    echo "Contents of '$table_name':"
+    cat "$table_dir/$table_name"
+}
