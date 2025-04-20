@@ -64,9 +64,11 @@ chmod +x *.sh
 - Input validation with regex
 - Simulating databases using directories and text files
 
-## ✍️ Author
+## ✍️ Authors
 
 - [Rouali](https://github.com/Rouali)
+- [marriaammm](https://github.com/marriaammm)
+
 
 ## 📄 License
 
